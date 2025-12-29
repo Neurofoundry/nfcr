@@ -1,0 +1,2902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuroforge Console</title>
+    <style>
+        :root[data-theme="foundry"] {
+            --bg-dark: #0a0a0a;
+            --bg-medium: #1c1917;
+            --bg-light: #292524;
+            --bg-console: #0c0a09;
+            --text-light: #f5f5f4;
+            --text-medium: #a8a29e;
+            --accent-main: #ea580c;
+            --accent-secondary: #fb923c;
+            --accent-glow: rgba(251, 146, 60, 0.3);
+            --border-color: #44403c;
+            --header-bg: linear-gradient(135deg, rgba(28, 25, 23, 0.95), rgba(41, 37, 36, 0.95));
+            --status-gradient-from: #f59e0b;
+            --status-gradient-to: #d97706;
+            --button-gradient-from: #92400e;
+            --button-gradient-to: #7c2d12;
+            --button-hover-from: #ea580c;
+            --button-hover-to: #c2410c;
+            --message-user-bg: linear-gradient(135deg, #292524, #1c1917);
+            --message-ai-bg: linear-gradient(135deg, #1c1917, #0c0a09);
+        }
+
+        :root[data-theme="warpath"] {
+            --bg-dark: #0a0000;
+            --bg-medium: #1a0000;
+            --bg-light: #2d0000;
+            --bg-console: #050000;
+            --text-light: #fecaca;
+            --text-medium: #991b1b;
+            --accent-main: #dc2626;
+            --accent-secondary: #ef4444;
+            --accent-glow: rgba(220, 38, 38, 0.4);
+            --border-color: #450a0a;
+            --header-bg: linear-gradient(135deg, rgba(26, 0, 0, 0.95), rgba(45, 0, 0, 0.95));
+            --status-gradient-from: #dc2626;
+            --status-gradient-to: #991b1b;
+            --button-gradient-from: #7f1d1d;
+            --button-gradient-to: #450a0a;
+            --button-hover-from: #dc2626;
+            --button-hover-to: #991b1b;
+            --message-user-bg: linear-gradient(135deg, #2d0000, #1a0000);
+            --message-ai-bg: linear-gradient(135deg, #1a0000, #050000);
+        }
+
+        :root[data-theme="aegis"] {
+            --bg-dark: #e5e7eb;
+            --bg-medium: #d1d5db;
+            --bg-light: #9ca3af;
+            --bg-console: #f9fafb;
+            --text-light: #111827;
+            --text-medium: #6b7280;
+            --accent-main: #3b82f6;
+            --accent-secondary: #60a5fa;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --border-color: #9ca3af;
+            --header-bg: linear-gradient(135deg, rgba(209, 213, 219, 0.95), rgba(156, 163, 175, 0.95));
+            --status-gradient-from: #3b82f6;
+            --status-gradient-to: #2563eb;
+            --button-gradient-from: #3b82f6;
+            --button-gradient-to: #2563eb;
+            --button-hover-from: #60a5fa;
+            --button-hover-to: #3b82f6;
+            --message-user-bg: linear-gradient(135deg, #d1d5db, #e5e7eb);
+            --message-ai-bg: linear-gradient(135deg, #f9fafb, #f3f4f6);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        html, body { 
+            height: 100%; 
+            overflow: hidden; 
+        }
+        
+        body {
+            background: radial-gradient(ellipse at top, var(--bg-medium), var(--bg-dark));
+            color: var(--text-light);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            transition: background 0.5s ease;
+        }
+
+        .console-container {
+            /* Adjust dimensions for an even taller layout with minimal scrollbar usage */
+            width: 92%;
+            max-width: 1400px;
+            height: 90vh;
+            max-height: 900px;
+            background: var(--bg-console);
+            backdrop-filter: blur(20px);
+            border: 2px solid var(--border-color);
+            border-radius: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 
+                0 25px 50px -12px rgba(0,0,0,0.7),
+                inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: var(--header-bg);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+        
+        .chat-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-secondary), transparent);
+            opacity: 0.5;
+        }
+        
+        .header-status { 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+        }
+        
+        .status-dot {
+            width: 0.875rem;
+            height: 0.875rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--status-gradient-from), var(--status-gradient-to));
+            animation: pulse 2s infinite;
+            box-shadow: 
+                0 0 10px var(--status-gradient-from),
+                0 0 20px var(--status-gradient-from);
+            position: relative;
+        }
+        
+        .status-dot::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: inherit;
+            filter: blur(4px);
+            opacity: 0.6;
+            z-index: -1;
+        }
+
+        .status-dot.connected {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            box-shadow: 
+                0 0 10px #16a34a,
+                0 0 20px #16a34a;
+        }
+        
+        .chat-header h2 { 
+            font-size: 1.25rem; 
+            font-weight: 700;
+            letter-spacing: 0.025em;
+            background: linear-gradient(135deg, var(--text-light), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header-controls { 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+        }
+        
+        .theme-selector {
+            background: rgba(0,0,0,0.3);
+            border: 1.5px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.625rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            backdrop-filter: blur(10px);
+        }
+        
+        .theme-selector:hover { 
+            border-color: var(--accent-main); 
+            background: rgba(0,0,0,0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        
+        .plus-button {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            padding: 0.625rem;
+            border-radius: 0.75rem;
+            border: 1.5px solid var(--border-color);
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .plus-button:hover { 
+            background: linear-gradient(135deg, var(--accent-main), var(--accent-secondary));
+            border-color: var(--accent-secondary);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 16px var(--accent-glow);
+        }
+        
+        .plus-button-icon { 
+            width: 1.25rem; 
+            height: 1.25rem; 
+            display: block;
+            transition: transform 0.3s;
+        }
+        
+        .plus-button:hover .plus-button-icon {
+            transform: rotate(90deg);
+        }
+
+        /* Styles for the new chat button in the status panel */
+        .new-chat-button {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border: 1.5px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .new-chat-button:hover {
+            background: linear-gradient(135deg, var(--accent-main), var(--accent-secondary));
+            border-color: var(--accent-secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .input-area .upload-btn {
+            margin-right: 0.5rem;
+        }
+
+        .main-content { 
+            display: flex; 
+            flex: 1; 
+            overflow: hidden;
+        }
+        
+        .left-sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, var(--bg-medium), var(--bg-dark));
+            border-right: 2px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            gap: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .command-history { 
+            flex: 1; 
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        
+        .command-history::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .command-history::-webkit-scrollbar-thumb {
+            background: var(--accent-main);
+            border-radius: 3px;
+        }
+        
+        .command-history h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-secondary);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .command-btn {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            border: 1.5px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.75rem 1rem;
+            border-radius: 0.625rem;
+            margin-bottom: 0.625rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.875rem;
+            text-align: left;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+        
+        .command-btn:hover { 
+            background: linear-gradient(135deg, var(--accent-main), var(--accent-secondary));
+            border-color: var(--accent-secondary);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        
+        .connection-panel {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid var(--border-color);
+            border-radius: 1rem;
+            /* tightened system status panel */
+            padding: 0.75rem;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+        
+        .connection-panel h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent-secondary);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .connection-item { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            /* compact spacing for each connection item */
+            margin-bottom: 0.5rem;
+            padding: 0.4rem;
+            border-radius: 0.5rem;
+            transition: background 0.3s;
+        }
+        
+        .connection-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .connection-item:last-child { 
+            margin-bottom: 0; 
+        }
+        
+        .connection-label { 
+            font-size: 0.875rem; 
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        
+        .connection-status { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+        }
+        
+        .status-indicator { 
+            width: 0.75rem; 
+            height: 0.75rem; 
+            border-radius: 50%; 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            background: inherit;
+            filter: blur(4px);
+            opacity: 0.5;
+            z-index: -1;
+        }
+        
+        .status-indicator.disconnected { 
+            background: #dc2626; 
+            box-shadow: 0 0 12px #dc2626; 
+            animation: pulse 1.5s infinite; 
+        }
+        
+        .status-indicator.connected { 
+            background: #16a34a; 
+            box-shadow: 0 0 12px #16a34a; 
+        }
+
+        .status-indicator.warning { 
+            background: #f59e0b; 
+            box-shadow: 0 0 12px #f59e0b; 
+        }
+        
+        .status-count { 
+            font-size: 0.75rem; 
+            color: var(--text-medium); 
+            font-weight: 600; 
+            display: none; 
+        }
+
+        .center-area { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+        }
+        
+        .tabs-container { 
+            display: flex; 
+            background: linear-gradient(180deg, var(--bg-medium), var(--bg-console));
+            border-bottom: 2px solid var(--border-color);
+            padding: 0 1rem;
+            gap: 0.5rem;
+        }
+        
+        .tab {
+            padding: 1rem 1.75rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            color: var(--text-medium);
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+        
+        .tab::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--accent-main), var(--accent-secondary));
+            opacity: 0;
+            transition: opacity 0.3s;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+        
+        .tab:hover { 
+            color: var(--text-light);
+            background: rgba(255,255,255,0.05);
+        }
+        
+        .tab.active { 
+            color: var(--accent-secondary); 
+            border-bottom-color: var(--accent-secondary);
+            background: rgba(255,255,255,0.08);
+            box-shadow: 0 -2px 10px var(--accent-glow);
+        }
+
+        /* Dock Console 2 and subsequent tabs to the right */
+        .tabs-container .tab[data-tab="console-2"] {
+            margin-left: auto;
+        }
+
+        /* Custom header images sizing */
+        .status-icon {
+            /* Increase size by 20-25% */
+            width: 3.25rem; /* Adjusted from 2.6rem */
+            height: 3.25rem; /* Adjusted from 2.6rem */
+        }
+
+        .header-banner {
+            /* Increase size by 20-25% */
+            height: 4.3rem; /* Adjusted from 3.45rem */
+            width: auto; /* Maintain aspect ratio */
+        }
+        
+        .tab-content { 
+            display: none; 
+            flex-direction: column; 
+            flex: 1; 
+            overflow: hidden; 
+        }
+        
+        .tab-content.active { 
+            display: flex; 
+        }
+
+        .right-sidebar {
+            width: 160px;
+            background: linear-gradient(180deg, var(--bg-medium), var(--bg-dark));
+            border-left: 2px solid var(--border-color);
+            padding: 1.5rem 0.75rem;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .right-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .right-sidebar::-webkit-scrollbar-thumb {
+            background: var(--accent-main);
+            border-radius: 3px;
+        }
+        
+        .right-sidebar h3 { 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.1em; 
+            color: var(--accent-secondary); 
+            margin-bottom: 1rem; 
+            font-weight: 700; 
+            text-align: center;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        /* Scrollable area for the main action buttons in the sidebar */
+        .actions-scroll {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            overflow-x: hidden; /* prevent horizontal scroll */
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            padding-bottom: 0.25rem;
+        }
+
+            /* Match left sidebar scrollbar: 6px wide, accent thumb */
+            .actions-scroll::-webkit-scrollbar,
+            .right-sidebar::-webkit-scrollbar,
+            .chat-window::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .actions-scroll::-webkit-scrollbar-track,
+            .right-sidebar::-webkit-scrollbar-track,
+            .chat-window::-webkit-scrollbar-track {
+                background: var(--bg-console);
+            }
+
+            /* Hidden-by-default thumb: transparent until hover */
+            .actions-scroll::-webkit-scrollbar-thumb,
+            .right-sidebar::-webkit-scrollbar-thumb,
+            .chat-window::-webkit-scrollbar-thumb {
+                background: transparent;
+                border-radius: 3px;
+            }
+
+            /* Reveal accent-colored thumb when the container is hovered */
+            .actions-scroll:hover::-webkit-scrollbar-thumb,
+            .right-sidebar:hover::-webkit-scrollbar-thumb,
+            .chat-window:hover::-webkit-scrollbar-thumb {
+                background: var(--accent-main);
+            }
+
+            .actions-scroll:hover::-webkit-scrollbar-thumb:hover,
+            .right-sidebar:hover::-webkit-scrollbar-thumb:hover,
+            .chat-window:hover::-webkit-scrollbar-thumb:hover {
+                background: var(--accent-secondary);
+            }
+
+            /* Firefox: match thin + accent color */
+            .actions-scroll,
+            .right-sidebar,
+            .chat-window {
+                scrollbar-width: thin;
+                scrollbar-color: var(--accent-main) var(--bg-console);
+            }
+
+        /* Dedicated non-floating panel for export/clear/shutdown */
+        .special-actions {
+            flex: 0 0 auto;
+            margin-top: 0.75rem;
+            padding: 0.25rem; /* reduced padding */
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .action-btn {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+            border: 1.5px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.875rem 0.75rem;
+            border-radius: 0.75rem;
+            margin-bottom: 0.625rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.8125rem;
+            text-align: center;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+        
+        .action-btn:hover { 
+            background: linear-gradient(135deg, var(--accent-main), var(--accent-secondary));
+            border-color: var(--accent-secondary);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 16px var(--accent-glow);
+        }
+
+        .chat-window { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 2rem; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1.25rem;
+            background: radial-gradient(ellipse at center, rgba(255,255,255,0.02), transparent);
+        }
+        
+        .chat-window::-webkit-scrollbar { 
+            width: 10px; 
+        }
+        
+        .chat-window::-webkit-scrollbar-thumb { 
+            background: linear-gradient(180deg, var(--accent-main), var(--accent-secondary));
+            border-radius: 5px;
+            border: 2px solid var(--bg-console);
+        }
+        
+        .chat-window::-webkit-scrollbar-track { 
+            background: var(--bg-console); 
+        }
+
+        .message { 
+            display: flex; 
+            max-width: 75%; 
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .message.user { 
+            margin-left: auto; 
+            justify-content: flex-end; 
+        }
+        
+        .message.ai { 
+            justify-content: flex-start; 
+        }
+        
+        .message-box { 
+            padding: 1.25rem 1.5rem;
+            border-radius: 1.25rem;
+            backdrop-filter: blur(10px);
+            border: 1.5px solid var(--border-color);
+            position: relative;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        
+        .message.user .message-box { 
+            background: var(--message-user-bg);
+            border-top-right-radius: 0.375rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .message.ai .message-box { 
+            background: var(--message-ai-bg);
+            border-top-left-radius: 0.375rem;
+            box-shadow: 0 4px 15px var(--accent-glow);
+            /* add padding at the bottom to accommodate overlayed feedback icons */
+            padding-bottom: 2.5rem;
+        }
+        
+        .message-content {
+            /* Ensure text content does not overlap */
+            margin-bottom: 1rem;
+        }
+
+        .message-meta { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.75rem; 
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Style for the reaction dropdown moved into the message meta row */
+        .message-meta select {
+            margin-left: auto;
+            background: rgba(0,0,0,0.4);
+            border: 1.5px solid var(--border-color);
+            color: var(--text-light);
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+        }
+        
+        .message-role { 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 0.1em; 
+            background: linear-gradient(135deg, var(--accent-main), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .message-timestamp { 
+            font-size: 0.75rem; 
+            color: var(--text-medium);
+            font-weight: 500;
+        }
+        
+        .message-content p { 
+            color: var(--text-light); 
+            line-height: 1.7;
+            font-weight: 400;
+        }
+
+        .input-area { 
+            background: linear-gradient(180deg, var(--bg-console), var(--bg-medium));
+            backdrop-filter: blur(10px);
+            border-top: 2px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            display: flex; 
+            gap: 1rem;
+            position: relative;
+        }
+        
+        .input-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-secondary), transparent);
+            opacity: 0.5;
+        }
+        
+        .chat-input {
+            flex-grow: 1;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1rem 1.5rem;
+            color: var(--text-light);
+            font-size: 1rem;
+            font-weight: 400;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            backdrop-filter: blur(10px);
+        }
+        
+        .chat-input::placeholder { 
+            color: var(--text-medium);
+            opacity: 0.7;
+        }
+        
+        .chat-input:focus { 
+            border-color: var(--accent-main); 
+            box-shadow: 
+                0 0 0 3px var(--accent-glow),
+                inset 0 1px 3px rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.6);
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, var(--accent-main), var(--accent-secondary));
+            color: var(--text-light);
+            border: 2px solid transparent;
+            border-radius: 1rem;
+            padding: 1rem 2rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .send-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-main));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .send-btn:hover::before {
+            opacity: 1;
+        }
+        
+        .send-btn:hover { 
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 
+                0 15px 30px var(--accent-glow),
+                0 5px 15px rgba(0,0,0,0.3);
+            border-color: var(--accent-secondary);
+        }
+        
+        .send-icon { 
+            width: 1.25rem; 
+            height: 1.25rem;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s;
+        }
+        
+        .send-btn:hover .send-icon {
+            transform: translateX(3px) rotate(-5deg);
+        }
+        
+        .send-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .feedback-container {
+            /* Align feedback icons properly */
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .loader { 
+            width: 6px; 
+            height: 6px; 
+            border-radius: 50%; 
+            background: linear-gradient(135deg, var(--accent-main), var(--accent-secondary));
+            animation: pulse-dot 1.2s infinite ease-in-out; 
+            margin: 0 6px;
+            box-shadow: 0 0 10px var(--accent-main);
+        }
+        
+        .loader-container { 
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-start;
+            padding: 0.5rem 0;
+        }
+        
+        .loader:nth-child(2) { 
+            animation-delay: 0.2s; 
+        }
+        
+        .loader:nth-child(3) { 
+            animation-delay: 0.4s; 
+        }
+
+        @keyframes pulse-dot { 
+            0%, 100% { 
+                opacity: 0.3; 
+                transform: scale(0.7); 
+            } 
+            50% { 
+                opacity: 1; 
+                transform: scale(1.3); 
+            } 
+        }
+        
+        @keyframes fadeIn { 
+            from { 
+                opacity: 0; 
+                transform: translateY(15px); 
+            } 
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            } 
+        }
+        
+        @keyframes pulse { 
+            0%, 100% { 
+                opacity: 1; 
+            } 
+            50% { 
+                opacity: 0.6; 
+            } 
+        }
+        
+        .bridge-icon {
+            display: inline-block;
+            width: 28px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-main), var(--accent-secondary));
+            border-radius: 3px;
+            animation: jiggle 0.5s infinite;
+            box-shadow: 0 0 10px var(--accent-main);
+        }
+        
+        @keyframes jiggle {
+            0%, 100% { transform: translateY(0); }
+            25% { transform: translateY(-2px); }
+            50% { transform: translateY(2px); }
+            75% { transform: translateY(-2px); }
+        }
+
+        .action-separator {
+            border: none;
+            border-top: 2px solid var(--border-color);
+            margin: 0.75rem 0;
+            width: 100%;
+            opacity: 0.5;
+        }
+
+        /* bridge-line removed per user request */
+
+        .new-chat-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        /* Scrollbar styling for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-console);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent-main), var(--accent-secondary));
+            border-radius: 5px;
+            border: 2px solid var(--bg-console);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-secondary);
+        }
+
+        /* ----------------------------------------------------------------------------
+         * Caption & Render Modal styles
+         *
+         * A full‑screen popout for the caption→render flow.  The modal uses
+         * theme variables for colours and includes tag chips for style presets,
+         * a diffusion model selector and negative prompt input.  It is hidden
+         * by default and revealed via JavaScript.
+         * --------------------------------------------------------------------------*/
+        #caption-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+        }
+
+        #caption-modal .modal-content {
+            background: var(--bg-medium);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Layout for modal content: split into left (preview) and right (controls) */
+        #caption-modal .modal-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        @media (min-width: 640px) {
+            #caption-modal .modal-inner {
+                flex-direction: row;
+            }
+            #caption-modal .modal-left {
+                flex: 0 0 35%;
+                margin-right: 1.25rem;
+            }
+            #caption-modal .modal-right {
+                flex: 1;
+            }
+        }
+
+        /* Left column styling */
+        #caption-modal .modal-left {
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1rem;
+        }
+        #caption-modal .preview-header {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-light);
+            background: var(--bg-medium);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+        }
+        #caption-modal .modal-left .image-preview {
+            /* Position relative so that the inpaint mask canvas can be absolutely positioned
+               over the preview image. The max-height constraint preserves aspect ratio. */
+            position: relative;
+            width: 100%;
+            max-height: 240px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+            display: none;
+        }
+        #caption-modal .modal-left .image-preview img {
+            width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            object-fit: contain;
+        }
+        #caption-modal .modal-left button {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            background: var(--bg-light);
+            color: var(--text-light);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        #caption-modal .modal-left button:hover {
+            border-color: var(--accent-main);
+            background: var(--accent-main);
+            color: #fff;
+        }
+
+        /* Right column header */
+        #caption-modal .modal-header {
+            margin-bottom: 1rem;
+        }
+        #caption-modal .modal-header h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-light);
+        }
+        #caption-modal .modal-header .subtitle {
+            font-size: 0.75rem;
+            color: var(--text-medium);
+        }
+
+        #caption-modal h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        #caption-modal .field {
+            margin-bottom: 1rem;
+        }
+
+        #caption-modal label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-medium);
+        }
+
+        #caption-modal textarea,
+        #caption-modal input[type="text"],
+        #caption-modal select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            background: var(--bg-light);
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        /* Preview image styling (moved into modal-left in new layout) */
+
+        /* Adjust spacing between tag container and custom style input */
+        #caption-modal .tag-container {
+            margin-bottom: 0.5rem;
+        }
+        #caption-modal #custom-style-input {
+            margin-top: 0.25rem;
+        }
+
+        #caption-modal textarea {
+            min-height: 80px;
+        }
+
+        #caption-modal .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        #caption-modal .tag {
+            display: inline-flex;
+            padding: 0.4rem 0.75rem;
+            border-radius: 0.75rem;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            font-size: 0.75rem;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        #caption-modal .tag.selected {
+            background: var(--accent-main);
+            color: #ffffff;
+            border-color: var(--accent-main);
+        }
+
+        #caption-modal .buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+        }
+
+        #caption-modal .buttons button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        #caption-modal .buttons button:hover {
+            border-color: var(--accent-main);
+            background: var(--accent-main);
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="console-container">
+        <div class="chat-header">
+            <div class="header-status">
+                <!-- Replace status dot and title with anvil and banner images -->
+                <img src="anvil.png" alt="Anvil" class="status-icon">
+                <img src="banner.png" alt="Banner" class="header-banner">
+            </div>
+            <div class="header-controls">
+                <select class="theme-selector" id="theme-selector">
+                    <option value="foundry">Foundry</option>
+                    <option value="warpath">Warpath</option>
+                    <option value="aegis">Aegis</option>
+                </select>
+                <select class="theme-selector" id="model-selector">
+                    <option value="qwen2.5:3b-instruct">General</option>
+                    <option value="qwen2.5:3b-coder">Coder</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="left-sidebar">
+                <div class="command-history">
+                    <h3>Recent Chats</h3>
+                    <div id="recent-chats"></div>
+                </div>
+                <!-- New Chat button placed above the system status area -->
+                <div class="new-chat-container">
+                    <button id="new-chat-btn" class="new-chat-button">New Chat</button>
+                </div>
+                <div class="connection-panel bridge-connected">
+                    <h3>System Status</h3>
+                        <div class="connection-item" data-service="core">
+                            <span class="connection-label">Core</span>
+                            <div class="connection-status">
+                                <!-- Core: starts disconnected (red). Will turn yellow when server responds, green when /health OK -->
+                                <div class="status-indicator disconnected" data-name="core"></div>
+                            </div>
+                        </div>
+                        <div class="connection-item" data-service="bridge">
+                            <span class="connection-label">Bridge</span>
+                            <div class="connection-status">
+                                <!-- Bridge: disconnected until established and connected to Ollama -->
+                                <div class="status-indicator disconnected" data-name="bridge"></div>
+                            </div>
+                        </div>
+                    <!-- bridge-line removed -->
+                </div>
+            </div>
+
+            <div class="center-area">
+                <div class="tabs-container">
+                    <div class="tab active" data-tab="console-1">Console 1</div>
+                    <div class="tab" data-tab="console-2">Console 2</div>
+                    <div class="tab" data-tab="console-3">Console 3</div>
+                </div>
+                <div class="tab-content active" id="console-1">
+                    <div class="chat-window" id="chat-window-1"></div>
+                    <div class="input-area">
+                        <button class="upload-btn plus-button" data-console="1">
+                            <svg class="plus-button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                        <input type="file" class="file-input" data-console="1" style="display: none;" />
+                        <input type="text" class="chat-input" data-console="1" placeholder="Go ahead, ask me anything..."/>
+                        <button class="send-btn" data-console="1">
+                            <svg class="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            <span>Send</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="tab-content" id="console-2">
+                    <div class="chat-window" id="chat-window-2"></div>
+                    <div class="input-area">
+                        <button class="upload-btn plus-button" data-console="2">
+                            <svg class="plus-button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                        <input type="file" class="file-input" data-console="2" style="display: none;" />
+                        <input type="text" class="chat-input" data-console="2" placeholder="Craft your neural query..."/>
+                        <button class="send-btn" data-console="2">
+                            <svg class="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            <span>Send</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="tab-content" id="console-3">
+                    <div class="chat-window" id="chat-window-3"></div>
+                    <div class="input-area">
+                        <button class="upload-btn plus-button" data-console="3">
+                            <svg class="plus-button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </button>
+                        <input type="file" class="file-input" data-console="3" style="display: none;" />
+                        <input type="text" class="chat-input" data-console="3" placeholder="Craft your neural query..."/>
+                        <button class="send-btn" data-console="3">
+                            <svg class="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            <span>Send</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-sidebar">
+                <h3>Actions</h3>
+                <div class="actions-scroll">
+                    <button id="render-btn" class="action-btn">Render</button>
+                    <!-- New: Caption & Render pipeline (Whisk‑like) -->
+                    <button id="caption-render-btn" class="action-btn">Caption &amp; Render</button>
+                    <button id="ingest-btn" class="action-btn">Ingest</button>
+                    <button id="crawl-btn" class="action-btn">Crawl</button>
+                    <!-- Labels without existing functions are set to Null -->
+                    <button class="action-btn">Null</button>
+                    <button class="action-btn">Null</button>
+                    <button class="action-btn">Null</button>
+                    <button id="backup-btn" class="action-btn">Backup</button>
+                    <button class="action-btn">Null</button>
+                    <button class="action-btn">Null</button>
+                    <button class="action-btn">Null</button>
+                    <button class="action-btn">Null</button>
+                    <hr class="action-separator">
+                </div>
+                <div class="special-actions">
+                    <button id="export-btn" class="action-btn">Export Chat</button>
+                    <button id="clear-btn" class="action-btn">Clear Chat</button>
+                    <button id="shutdown-btn" class="action-btn">Shutdown</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Caption & Render modal -->
+<div id="caption-modal">
+    <div class="modal-content">
+        <div class="modal-inner">
+            <!-- Left column: image preview and upload -->
+            <div class="modal-left">
+                <div class="preview-header">Selected Image</div>
+                <div class="image-preview">
+                    <img id="caption-preview" alt="Image preview" />
+                    <!-- Canvas for inpainting mask overlay; hidden by default. The canvas fills the
+                         preview area and allows the user to paint white regions to inpaint.
+                         It uses absolute positioning so it sits on top of the image. -->
+                    <!-- The mask canvas is semi-transparent so the underlying image is visible. -->
+                    <canvas id="inpaint-mask" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none; cursor:crosshair; opacity:0.4;"></canvas>
+                </div>
+                <!-- Button to clear the inpainting mask. Visible only when inpainting is selected. -->
+                <button id="clear-mask-btn" type="button" style="display:none; margin-bottom: 0.5rem;">Clear Mask</button>
+                <button id="caption-upload-new-image" type="button">Upload New Image</button>
+            </div>
+            <!-- Right column: caption & controls -->
+            <div class="modal-right">
+                <div class="modal-header">
+                    <h3>Caption &amp; Render</h3>
+                    <p class="subtitle">Generate AI-powered images from your source</p>
+                </div>
+                <div class="field">
+                    <label for="caption-input">Caption</label>
+                    <textarea id="caption-input"></textarea>
+                </div>
+                <div class="field">
+                    <label for="model-select">Select diffusion model</label>
+                    <select id="model-select">
+                        <option value="@cf/stabilityai/stable-diffusion-xl-base-1.0">SDXL Base</option>
+                        <option value="@cf/bytedance/stable-diffusion-xl-lightning">SDXL Lightning</option>
+                        <option value="@cf/runwayml/stable-diffusion-v1-5-img2img">v1.5 Img2Img</option>
+                        <option value="@cf/runwayml/stable-diffusion-v1-5-inpainting">v1.5 Inpainting</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Select style tags</label>
+                    <div id="style-tags-container" class="tag-container"></div>
+                    <input type="text" id="custom-style-input" placeholder="Add custom style (optional)">
+                </div>
+                <div class="field">
+                    <label>Negative prompt</label>
+                    <div id="negative-tags-container" class="tag-container"></div>
+                    <input type="text" id="custom-negative-input" placeholder="Add custom negative prompt (optional)">
+                </div>
+                <!-- Video settings -->
+                <div class="field" id="video-settings-field">
+                    <label>Video settings</label>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <div style="flex:1; min-width:120px;">
+                            <label for="video-frames-input">Frames</label>
+                            <input type="number" id="video-frames-input" min="1" max="48" step="1" value="14" style="width:100%;">
+                        </div>
+                        <div style="flex:1; min-width:120px;">
+                            <label for="video-fps-input">FPS</label>
+                            <input type="number" id="video-fps-input" min="1" max="60" step="1" value="8" style="width:100%;">
+                        </div>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button id="caption-modal-generate">Generate</button>
+                    <button id="caption-modal-video">Generate Video</button>
+                    <button id="caption-modal-cancel">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+        const GREETINGS = [
+            "Greetings, Architect. What can I do for you today?",
+            "Neuroforge ready at your command. What's your query, Architect?",
+            "Greetings, Architect. The console is active and standing by.",
+            "Online and prepared. What can I help you with today?"
+        ];
+        const GREETING = GREETINGS[Math.floor(Math.random() * GREETINGS.length)];
+        const API_URL = "http://localhost:8080";
+        const consoles = {
+            1: { conversationId: null, chatWindow: document.getElementById('chat-window-1'), turnCounter: 0 },
+            2: { conversationId: null, chatWindow: document.getElementById('chat-window-2'), turnCounter: 0 },
+            3: { conversationId: null, chatWindow: document.getElementById('chat-window-3'), turnCounter: 0 }
+        };
+
+        document.getElementById('theme-selector').addEventListener('change', (e) => {
+            document.documentElement.setAttribute('data-theme', e.target.value);
+            localStorage.setItem('console-theme', e.target.value);
+        });
+
+        const savedTheme = localStorage.getItem('console-theme') || 'foundry';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('theme-selector').value = savedTheme;
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+            });
+        });
+        
+        const handleChatSend = async (consoleNum) => {
+            const input = document.querySelector(`.chat-input[data-console="${consoleNum}"]`);
+            const msg = input.value.trim();
+            if (!msg) return;
+            addMessageToUI(consoleNum, 'user', msg);
+            input.value = '';
+            addLoaderToUI(consoleNum);
+
+            // ------------------------------------------------------------------
+            // Natural language command handling
+            // Detect messages like "Please recall <query>", "Please crawl <URL>"
+            // or containing "batch crawl" and route them to the appropriate API
+            // endpoints.  This allows users to trigger actions in plain
+            // English instead of using slash commands.
+            const lowerMsg = msg.toLowerCase();
+            // Handle recall request via natural language.  If the message
+            // begins with "please recall", treat the remainder of the message
+            // as the search query and send it to the /recall API.
+            if (lowerMsg.startsWith('please recall')) {
+                // Extract the query by removing the command prefix
+                const recallQuery = msg.replace(/please recall\s*/i, '').trim();
+                if (!recallQuery) {
+                    removeLoaderFromUI(consoleNum);
+                    addMessageToUI(consoleNum, 'ai', '❌ Please provide a search query after "Please recall".');
+                    return;
+                }
+                try {
+                    const res = await fetch(`${API_URL}/recall`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: recallQuery })
+                    });
+                    const data = await res.json();
+                    removeLoaderFromUI(consoleNum);
+                    if (data.ok) {
+                        const results = data.results || [];
+                        if (results.length === 0) {
+                            addMessageToUI(consoleNum, 'ai', `🔍 No recall results found for "${recallQuery}".`);
+                        } else {
+                            // Build a simple summary of the results.  Show the type and
+                            // filename for each hit and include a short JSON snippet.
+                            let summary = `🔍 Found ${results.length} result${results.length > 1 ? 's' : ''} for "${recallQuery}":\n`;
+                            results.forEach((r, idx) => {
+                                const type = r.type?.toUpperCase?.() || 'UNKNOWN';
+                                const file = r.file || 'unknown';
+                                // Extract a brief descriptor from data if possible
+                                let descriptor = '';
+                                try {
+                                    if (r.data?.summary) descriptor = r.data.summary;
+                                    else if (r.data?.tweak) descriptor = r.data.tweak;
+                                    else descriptor = JSON.stringify(r.data).slice(0, 80) + '...';
+                                } catch (e) {
+                                    descriptor = '';
+                                }
+                                summary += `${idx + 1}. [${type}] ${file} - ${descriptor}\n`;
+                            });
+                            addMessageToUI(consoleNum, 'ai', summary.trim());
+                        }
+                    } else {
+                        addMessageToUI(consoleNum, 'ai', `❌ Recall failed: ${data.detail || 'Unknown error'}`);
+                    }
+                } catch (error) {
+                    removeLoaderFromUI(consoleNum);
+                    addMessageToUI(consoleNum, 'ai', `Recall error: ${error.message}`);
+                }
+                return;
+            }
+            // Handle log query via natural language.  If the message begins with
+            // "please show logs" or "please query logs", treat the remainder
+            // as a search term and send it to the /logs/query API.  This
+            // enables users to perform lightweight search over the logs table
+            // using plain English phrases.
+            if (lowerMsg.startsWith('please show logs') || lowerMsg.startsWith('please query logs')) {
+                // Remove the command prefix and trim
+                let searchTerm = '';
+                if (lowerMsg.startsWith('please show logs')) {
+                    searchTerm = msg.replace(/please show logs\s*/i, '').trim();
+                } else {
+                    searchTerm = msg.replace(/please query logs\s*/i, '').trim();
+                }
+                if (!searchTerm) {
+                    removeLoaderFromUI(consoleNum);
+                    addMessageToUI(consoleNum, 'ai', '❌ Please provide a search term after the logs command.');
+                    return;
+                }
+                try {
+                    const res = await fetch(`${API_URL}/logs/query`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: searchTerm })
+                    });
+                    const data = await res.json();
+                    removeLoaderFromUI(consoleNum);
+                    if (data.ok) {
+                        const results = data.results || [];
+                        if (results.length === 0) {
+                            addMessageToUI(consoleNum, 'ai', `🔍 No log results found for "${searchTerm}".`);
+                        } else {
+                            let summary = `🔍 Found ${results.length} log entr${results.length > 1 ? 'ies' : 'y'} for "${searchTerm}":\n`;
+                            results.forEach((row, idx) => {
+                                const ts = row.timestamp || '';
+                                const mod = row.module || '';
+                                const evt = row.event_type || '';
+                                const tags = row.tags || '';
+                                summary += `${idx + 1}. [${ts}] ${mod} (${evt}) tags: ${tags}\n`;
+                            });
+                            addMessageToUI(consoleNum, 'ai', summary.trim());
+                        }
+                    } else {
+                        addMessageToUI(consoleNum, 'ai', `❌ Log query failed: ${data.detail || 'Unknown error'}`);
+                    }
+                } catch (error) {
+                    removeLoaderFromUI(consoleNum);
+                    addMessageToUI(consoleNum, 'ai', `Log query error: ${error.message}`);
+                }
+                return;
+            }
+            // Handle single URL crawl via natural language
+            if (lowerMsg.startsWith('please crawl')) {
+                // Try to extract the first URL in the message
+                const urlMatch = msg.match(/https?:\/\/\S+/i);
+                if (urlMatch) {
+                    const urlToCrawl = urlMatch[0];
+                    try {
+                        const res = await fetch(`${API_URL}/crawl`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: urlToCrawl, async_mode: true })
+                        });
+                        const data = await res.json();
+                        removeLoaderFromUI(consoleNum);
+                        if (data.ok) {
+                            addMessageToUI(consoleNum, 'ai', data.content);
+                        } else {
+                            addMessageToUI(consoleNum, 'ai', `❌ Crawl failed: ${data.detail || 'Unknown error'}`);
+                        }
+                    } catch (error) {
+                        removeLoaderFromUI(consoleNum);
+                        addMessageToUI(consoleNum, 'ai', `Crawl error: ${error.message}`);
+                    }
+                } else {
+                    // No valid URL detected
+                    removeLoaderFromUI(consoleNum);
+                    addMessageToUI(consoleNum, 'ai', '❌ Please provide a valid URL after "Please crawl".');
+                }
+                return;
+            }
+            // Handle batch crawl request via natural language
+            if (lowerMsg.includes('batch crawl')) {
+                try {
+                    const res = await fetch(`${API_URL}/crawl`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ batch: true })
+                    });
+                    const data = await res.json();
+                    removeLoaderFromUI(consoleNum);
+                    if (data.ok) {
+                        addMessageToUI(consoleNum, 'ai', data.content);
+                    } else {
+                        addMessageToUI(consoleNum, 'ai', `❌ Batch crawl failed: ${data.detail || 'Unknown error'}`);
+                    }
+                } catch (error) {
+                    removeLoaderFromUI(consoleNum);
+                    addMessageToUI(consoleNum, 'ai', `Batch crawl error: ${error.message}`);
+                }
+                return;
+            }
+            // ------------------------------------------------------------------
+
+            try {
+                if (msg.startsWith("/feature 4") || msg.startsWith("/image_render")) {
+                    const prompt = msg
+                        .replace(/\/feature 4\s*/i, "")
+                        .replace(/\/image_render\s*/i, "")
+                        .replace(/^render\s*/i, "")
+                        .trim();
+
+                    const res = await fetch(`${API_URL}/features/4/render`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ prompt })
+                    });
+                    const data = await res.json();
+                    removeLoaderFromUI(consoleNum);
+
+                    if (data.image_base64) {
+                        addMessageToUI(consoleNum, "ai", `🖼️ Rendered: ${prompt}`);
+                        const img = document.createElement("img");
+                        img.src = "data:image/png;base64," + data.image_base64;
+                        img.style.maxWidth = "512px";
+                        img.style.borderRadius = "8px";
+                        img.style.marginTop = "8px";
+                        consoles[consoleNum].chatWindow.appendChild(img);
+                        consoles[consoleNum].chatWindow.scrollTop = consoles[consoleNum].chatWindow.scrollHeight;
+                    } else {
+                        addMessageToUI(consoleNum, "ai", "❌ Render failed.");
+                    }
+                    return;
+                }
+                const res = await fetch(`${API_URL}/chat`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ prompt: msg, conversation_id: consoles[consoleNum].conversationId })
+                });
+                if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+                const data = await res.json();
+                consoles[consoleNum].conversationId = data.conversation_id;
+                storeRecentChat(data.conversation_id);
+                removeLoaderFromUI(consoleNum);
+                addMessageToUI(consoleNum, "ai", data.content);
+            } catch (error) {
+                removeLoaderFromUI(consoleNum);
+                addMessageToUI(consoleNum, "ai", `Connection error: ${error.message}`);
+            }
+        };
+
+        const addMessageToUI = (num, sender, text) => {
+            const win = consoles[num].chatWindow;
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const msg = document.createElement('div');
+            msg.className = `message ${sender}`;
+            msg.innerHTML = `<div class="message-box"><div class="message-meta"><span class="message-role">${sender === 'user' ? 'You' : 'Neuroforge'}</span><span class="message-timestamp">${time}</span></div><div class="message-content"><p>${text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</p></div></div>`;
+            win.appendChild(msg);
+            if (sender === 'ai') {
+                const turnId = consoles[num].turnCounter++;
+                const currentConvId = consoles[num].conversationId;
+                addFeedbackUI(num, msg, currentConvId, turnId, text);
+            }
+            win.scrollTop = win.scrollHeight;
+        };
+
+        function addFeedbackUI(consoleNum, messageElement, convId, turnId, rejectedResponse) {
+            const feedback = document.createElement('div');
+            feedback.className = 'feedback-container';
+
+            // Create thumbs up button
+            const upBtn = document.createElement('button');
+            upBtn.type = 'button';
+            upBtn.className = 'thumb-up';
+            upBtn.title = 'Thumbs Up';
+            upBtn.textContent = '👍';
+
+            // Create thumbs down button
+            const downBtn = document.createElement('button');
+            downBtn.type = 'button';
+            downBtn.className = 'thumb-down';
+            downBtn.title = 'Thumbs Down';
+            downBtn.textContent = '👎';
+
+            // Append thumbs to feedback container
+            feedback.appendChild(upBtn);
+            feedback.appendChild(downBtn);
+
+            // Append feedback container to message box
+            const msgBox = messageElement.querySelector('.message-box');
+            if (msgBox) msgBox.appendChild(feedback);
+
+            // Build compact single-select tag dropdown (radio-style compact behavior)
+            const tagSelect = document.createElement('select');
+            tagSelect.className = 'tag-select';
+            tagSelect.multiple = false;
+            // Small compact sizing so it doesn't take too much space
+            tagSelect.style.minWidth = '140px';
+            tagSelect.style.maxWidth = '220px';
+
+            // Placeholder option (not selectable as a tag)
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Tag (optional)';
+            placeholder.disabled = true;
+            placeholder.selected = true;
+            tagSelect.appendChild(placeholder);
+
+            const tagOptions = [
+                'precise',
+                'too_vague',
+                'hallucination',
+                'off_topic',
+                'great_summary',
+                'well_structured',
+                'too_technical',
+                'incomplete',
+                'repetitive'
+            ];
+            tagOptions.forEach(tag => {
+                const opt = document.createElement('option');
+                opt.value = tag;
+                // show a friendlier label (replace underscores with spaces)
+                opt.textContent = tag.replace(/_/g, ' ');
+                tagSelect.appendChild(opt);
+            });
+
+            // Append select to the message meta row
+            const meta = messageElement.querySelector('.message-meta');
+            if (meta) meta.appendChild(tagSelect);
+
+            function sendFeedback(rating) {
+                // For the compact dropdown we send zero or one tag as an array
+                const selectedValue = tagSelect.value;
+                const selectedTags = selectedValue ? [selectedValue] : [];
+                const conv = convId || consoles[consoleNum].conversationId;
+                const payload = {
+                    conv_id: conv,
+                    turn_id: turnId,
+                    rating: rating,
+                    tags: selectedTags,
+                    rejected_response: rejectedResponse
+                };
+                fetch(`${API_URL}/feedback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(err => console.error('Feedback error', err));
+            }
+
+            // Attach event listeners to thumbs
+            upBtn.addEventListener('click', () => sendFeedback(1));
+            downBtn.addEventListener('click', () => sendFeedback(-1));
+        }
+
+        const addLoaderToUI = (num) => {
+            const loader = document.createElement('div');
+            loader.className = 'message ai';
+            loader.id = `loader-message-${num}`;
+            loader.innerHTML = '<div class="message-box"><div class="message-meta"><span class="message-role">Neuroforge</span></div><div class="loader-container"><div class="loader"></div><div class="loader"></div><div class="loader"></div></div></div>';
+            consoles[num].chatWindow.appendChild(loader);
+            consoles[num].chatWindow.scrollTop = consoles[num].chatWindow.scrollHeight;
+        };
+
+        const removeLoaderFromUI = (num) => {
+            const loader = document.getElementById(`loader-message-${num}`);
+            if (loader) loader.remove();
+        };
+
+        document.querySelectorAll('.send-btn').forEach(btn => {
+            btn.addEventListener('click', () => handleChatSend(parseInt(btn.getAttribute('data-console'))));
+        });
+
+        document.querySelectorAll('.chat-input').forEach(input => {
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleChatSend(parseInt(input.getAttribute('data-console')));
+            });
+        });
+
+        document.getElementById('new-chat-btn').addEventListener('click', () => {
+            consoles[1].conversationId = null;
+            consoles[2].conversationId = null;
+            consoles[3].conversationId = null;
+            consoles[1].chatWindow.innerHTML = '';
+            consoles[2].chatWindow.innerHTML = '';
+            consoles[3].chatWindow.innerHTML = '';
+            addMessageToUI(1, 'ai', GREETING);
+        });
+
+        // Soft status check configuration and hysteresis counters
+        let coreOkStreak = 0;
+        let coreFailStreak = 0;
+        let bridgeOkStreak = 0;
+        let bridgeFailStreak = 0;
+        const REQUIRED_OK_STREAK = 2;       // require 2 consecutive OKs to flip to green
+        const REQUIRED_FAIL_STREAK = 2;     // require 2 consecutive failures to flip to red
+        const STATUS_POLL_INTERVAL = 120000; // 2 minutes
+        const STATUS_REQUEST_TIMEOUT = 3000; // 3s timeout for soft, non-blocking checks
+
+        async function updateSystemStatus() {
+            try {
+                // Soft fetch with AbortController to avoid long-blocking network calls
+                const ctrl = new AbortController();
+                const id = setTimeout(() => ctrl.abort(), STATUS_REQUEST_TIMEOUT);
+                const res = await fetch(`${API_URL}/status/services`, { signal: ctrl.signal });
+                clearTimeout(id);
+                if (!res.ok) throw new Error('Status check failed');
+                const data = await res.json();
+                const coreOk = Boolean(data.core_ok);
+                const vaultOk = Boolean(data.vault_ok);
+                const bridgeOk = Boolean(data.bridge_ok);
+                const setIndicatorState = (name, state) => {
+                    const ind = document.querySelector(`.status-indicator[data-name="${name}"]`);
+                    if (!ind) return;
+                    ind.classList.remove('disconnected', 'warning', 'connected');
+                    ind.classList.add(state);
+                };
+                // CORE hysteresis and state transitions
+                if (coreOk) {
+                    coreOkStreak += 1;
+                    coreFailStreak = 0;
+                } else {
+                    coreFailStreak += 1;
+                    coreOkStreak = 0;
+                }
+
+                // If we have consecutive OKs, mark core connected (green)
+                if (coreOkStreak >= REQUIRED_OK_STREAK) {
+                    setIndicatorState('core', 'connected');
+                } else if (coreOk) {
+                    // fetch succeeded but core not yet reported healthy -> yellow (server running)
+                    setIndicatorState('core', 'warning');
+                }
+
+                // If consecutive failures exceed threshold, mark disconnected
+                if (coreFailStreak >= REQUIRED_FAIL_STREAK) {
+                    setIndicatorState('core', 'disconnected');
+                }
+
+                // Vault keeps previous behavior (yellow if not fully OK but service present)
+                setIndicatorState('vault', vaultOk ? 'connected' : 'warning');
+
+                // BRIDGE hysteresis: require consecutive confirms to switch states to avoid flicker
+                if (bridgeOk) {
+                    bridgeOkStreak += 1;
+                    bridgeFailStreak = 0;
+                } else {
+                    bridgeFailStreak += 1;
+                    bridgeOkStreak = 0;
+                }
+
+                if (bridgeOkStreak >= REQUIRED_OK_STREAK) {
+                    setIndicatorState('bridge', 'connected');
+                }
+                if (bridgeFailStreak >= REQUIRED_FAIL_STREAK) {
+                    setIndicatorState('bridge', 'disconnected');
+                }
+                const headerDot = document.querySelector('.status-dot');
+                /* Safely update the legacy header dot if it exists */
+                if (headerDot) {
+                    if (bridgeOk) {
+                        headerDot.classList.add('connected');
+                    } else {
+                        headerDot.classList.remove('connected');
+                    }
+                }
+                const connPanel = document.querySelector('.connection-panel');
+                if (connPanel) {
+                    // Only show the bridge row when bridge is considered connected (green)
+                    const bridgeRow = connPanel.querySelector('[data-service="bridge"]');
+                    if (bridgeRow) {
+                        if (bridgeOkStreak >= REQUIRED_OK_STREAK) {
+                            bridgeRow.style.display = '';
+                            connPanel.classList.add('bridge-connected');
+                        } else {
+                            bridgeRow.style.display = 'none';
+                            connPanel.classList.remove('bridge-connected');
+                        }
+                    }
+                }
+            } catch (err) {
+                ['core','vault','bridge'].forEach(name => {
+                    const ind = document.querySelector(`.status-indicator[data-name="${name}"]`);
+                    if (ind) {
+                        ind.classList.remove('warning', 'connected');
+                        ind.classList.add('disconnected');
+                    }
+                });
+                const headerDot = document.querySelector('.status-dot');
+                if (headerDot) {
+                    headerDot.classList.remove('connected');
+                }
+            }
+        }
+        
+        function parseLogTimestamp(line) {
+            const m1 = line.match(/\[(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})\]/);
+            if (m1) return m1[2];
+            const m2 = line.match(/time=([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.+-]+)/);
+            if (m2) {
+                const d = new Date(m2[1]);
+                if (!isNaN(d)) {
+                    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                }
+            }
+            return '';
+        }
+
+        function renderLogLine(line) {
+            const t = parseLogTimestamp(line);
+            const safe = line.replace(/([<>&])/g, (s) => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;' }[s]));
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message ai';
+            const meta = t ? `<div class="message-meta"><span class="message-role">Log</span><span class="message-timestamp">${t}</span></div>` : '<div class="message-meta"><span class="message-role">Log</span></div>';
+            msgDiv.innerHTML = `<div class="message-box">${meta}<div class="message-content"><p>${safe}</p></div></div>`;
+            return msgDiv;
+        }
+
+        async function fetchLogs() {
+            try {
+                const res = await fetch(`${API_URL}/logs/combined?limit=100&_=${Date.now()}`, { cache: 'no-store' });
+                if (!res.ok) throw new Error('Logs fetch failed');
+                const text = await res.text();
+                const win = consoles[2].chatWindow;
+                win.innerHTML = '';
+                const lines = text.split('\n').filter(l => l.trim().length > 0);
+                if (lines.length === 0) {
+                    win.innerHTML = '<div class="message ai"><div class="message-box"><div class="message-content"><p>No recent logs.</p></div></div></div>';
+                } else {
+                    lines.forEach(line => {
+                        win.appendChild(renderLogLine(line));
+                    });
+                }
+            } catch (err) {
+                const win = consoles[2].chatWindow;
+                win.innerHTML = '<div class="message ai"><div class="message-box"><div class="message-content"><p>Log stream unavailable.</p></div></div></div>';
+            }
+        }
+
+        async function fetchOllamaLogs() {
+            try {
+                const res = await fetch(`${API_URL}/logs/ollama?limit=100&_=${Date.now()}`, { cache: 'no-store' });
+                if (!res.ok) throw new Error('Ollama logs fetch failed');
+                const text = await res.text();
+                const win = consoles[3].chatWindow;
+                win.innerHTML = '';
+                const trimmed = text.trim();
+                if (trimmed.length === 0) {
+                    win.innerHTML = '<div class="message ai"><div class="message-box"><div class="message-content"><p>No Ollama logs yet.</p></div></div></div>';
+                } else {
+                    trimmed.split('\n').forEach(line => {
+                        if (line.trim().length > 0) {
+                            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const msgDiv = document.createElement('div');
+                            msgDiv.className = 'message ai';
+                            msgDiv.innerHTML = `<div class="message-box"><div class="message-meta"><span class="message-role">Ollama</span><span class="message-timestamp">${time}</span></div><div class="message-content"><p>${line}</p></div></div>`;
+                            win.appendChild(msgDiv);
+                        }
+                    });
+                }
+            } catch (err) {
+                const win = consoles[3].chatWindow;
+                win.innerHTML = '<div class="message ai"><div class="message-box"><div class="message-content"><p>Ollama log stream unavailable.</p></div></div></div>';
+            }
+        }
+
+        // ---------------------------------------------------------------------
+        // Caption & Render workflow
+        //
+        // This section implements a modal dialog for the image→caption→render flow.
+        // When the user clicks "Caption & Render", they select an image, the server
+        // generates a caption, and then a modal appears allowing them to edit the
+        // caption, pick style tags, choose a diffusion model, and specify a negative
+        // prompt.  Upon clicking "Generate", the final prompt is assembled and sent
+        // to /features/4/render.
+        // ---------------------------------------------------------------------
+
+        // Previous selections for caption & render modal.  These variables
+        // persist across modal invocations so that users can reuse their
+        // last settings without re-entering them.
+        let lastCaption = '';
+        let lastSelectedStyles = [];
+        let lastCustomStyle = '';
+        let lastSelectedNegatives = [];
+        let lastCustomNegative = '';
+        let lastModel = '@cf/stabilityai/stable-diffusion-xl-base-1.0';
+        // Store the last uploaded image as a data URL.  This is used to
+        // provide the original image back to the backend when using
+        // models that require an image (img2img, inpainting).  It is
+        // updated whenever the user selects an image in the caption
+        // workflow or uploads a new image inside the modal.
+        let lastImageDataUrl = null;
+
+        // Persisted settings for video generation.  These values are
+        // remembered between uses of the modal so you don't have to
+        // re-enter them for each animation.  Defaults: 14 frames and
+        // 8 fps.
+        let lastFrames = 14;
+        let lastFps = 8;
+
+        const styleOptions = [
+            'epic cinematic',
+            'ultra realistic',
+            'oil painting',
+            'neon lights',
+            'sci-fi',
+            'fantasy',
+            'cyberpunk',
+            'portrait',
+            'landscape',
+            'anime',
+            'pixel art',
+            'synthwave'
+        ];
+
+        // Options for negative prompts (pre-defined)
+        const negativeOptions = [
+            'blurry', 'watermark', 'low quality', 'distorted',
+            'disfigured', 'bad anatomy', 'poorly drawn', 'extra limbs',
+            'duplicate', 'mutation', 'cropped', 'jpeg artifacts',
+            'oversaturated', 'grainy', 'text', 'signature'
+        ];
+
+        function populateStyleTags() {
+            const container = document.getElementById('style-tags-container');
+            if (!container) return;
+            container.innerHTML = '';
+            styleOptions.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'tag';
+                span.textContent = tag;
+                span.addEventListener('click', () => {
+                    span.classList.toggle('selected');
+                });
+                container.appendChild(span);
+            });
+        }
+
+        // Populate negative prompt tags into the negative tag container
+        function populateNegativeTags() {
+            const container = document.getElementById('negative-tags-container');
+            if (!container) return;
+            container.innerHTML = '';
+            negativeOptions.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'tag';
+                span.textContent = tag;
+                span.addEventListener('click', () => {
+                    span.classList.toggle('selected');
+                });
+                container.appendChild(span);
+            });
+        }
+
+        // -------------------------------------------------------------------
+        // Inpainting mask UI helpers
+        //
+        // The inpainting workflow requires an image and a corresponding mask
+        // indicating which parts of the image should be modified.  These
+        // helpers manage the display of the inpainting mask canvas, allow
+        // drawing on the canvas, and handle clearing the mask.  The canvas
+        // dimensions are matched to the preview image dimensions whenever
+        // the modal is opened or the model selection changes.
+
+        // Track whether the user is currently drawing on the mask canvas
+        let drawingMask = false;
+
+        function showInpaintUI() {
+            const maskCanvas = document.getElementById('inpaint-mask');
+            const clearBtn = document.getElementById('clear-mask-btn');
+            const previewImg = document.getElementById('caption-preview');
+            if (!maskCanvas || !clearBtn || !previewImg) return;
+            // Show the canvas and clear button
+            maskCanvas.style.display = 'block';
+            clearBtn.style.display = 'block';
+            // Determine canvas size based on the displayed image dimensions.
+            // Use clientWidth/clientHeight rather than naturalWidth to avoid
+            // scaling mismatches.  This ensures the mask aligns with the
+            // visible image.
+            const width = previewImg.clientWidth;
+            const height = previewImg.clientHeight;
+            maskCanvas.width = width;
+            maskCanvas.height = height;
+            // Fill the mask with solid black (no inpainting) initially.  The
+            // mask canvas has a CSS opacity set so the underlying image
+            // remains visible.
+            const ctx = maskCanvas.getContext('2d');
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, width, height);
+            // Ensure the mask remains semi-transparent during editing
+            maskCanvas.style.opacity = '0.4';
+            // Attach drawing handlers to paint white circles on the mask
+            maskCanvas.onmousedown = function() { drawingMask = true; };
+            maskCanvas.onmouseup = function() { drawingMask = false; };
+            maskCanvas.onmouseleave = function() { drawingMask = false; };
+            maskCanvas.onmousemove = function(e) {
+                if (!drawingMask) return;
+                const rect = maskCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const drawCtx = maskCanvas.getContext('2d');
+                drawCtx.fillStyle = 'white';
+                drawCtx.beginPath();
+                drawCtx.arc(x, y, 20, 0, 2 * Math.PI);
+                drawCtx.fill();
+            };
+            // Clear button resets mask to all black
+            clearBtn.onclick = function() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
+            };
+        }
+
+        function hideInpaintUI() {
+            const maskCanvas = document.getElementById('inpaint-mask');
+            const clearBtn = document.getElementById('clear-mask-btn');
+            if (maskCanvas) {
+                maskCanvas.style.display = 'none';
+                // Remove drawing handlers
+                maskCanvas.onmousedown = null;
+                maskCanvas.onmouseup = null;
+                maskCanvas.onmouseleave = null;
+                maskCanvas.onmousemove = null;
+            }
+            if (clearBtn) {
+                clearBtn.style.display = 'none';
+                clearBtn.onclick = null;
+            }
+        }
+
+        // Listen to model selection changes to toggle the inpainting UI
+        (function() {
+            const modelSelect = document.getElementById('model-select');
+            if (modelSelect) {
+                modelSelect.addEventListener('change', function() {
+                    if (modelSelect.value && modelSelect.value.toLowerCase().includes('inpaint')) {
+                        showInpaintUI();
+                    } else {
+                        hideInpaintUI();
+                    }
+                });
+            }
+        })();
+
+        function openCaptionModal(caption, previewUrl) {
+            const modal = document.getElementById('caption-modal');
+            if (!modal) return;
+            // Update the last image data URL only when a preview is provided.
+            // If no preview is provided (e.g. reopening the modal without
+            // selecting a new image), preserve the previously uploaded image.
+            if (previewUrl) {
+                lastImageDataUrl = previewUrl;
+            }
+            const captionEl = document.getElementById('caption-input');
+            if (captionEl) {
+                // If a caption is provided (from caption API), use it and update lastCaption;
+                // otherwise default to the last caption used.
+                if (caption !== undefined && caption !== null && caption !== '') {
+                    captionEl.value = caption;
+                    lastCaption = caption;
+                } else {
+                    captionEl.value = lastCaption || '';
+                }
+            }
+            const customEl = document.getElementById('custom-style-input');
+            if (customEl) {
+                // Populate custom style with last entry
+                customEl.value = lastCustomStyle || '';
+            }
+            const negCustomEl = document.getElementById('custom-negative-input');
+            if (negCustomEl) {
+                negCustomEl.value = lastCustomNegative || '';
+            }
+            const modelEl = document.getElementById('model-select');
+            if (modelEl) {
+                modelEl.value = lastModel || '@cf/stabilityai/stable-diffusion-xl-base-1.0';
+                // Show or hide the inpainting mask UI based on the selected model when opening the modal
+                try {
+                    if (modelEl.value.toLowerCase().includes('inpaint')) {
+                        showInpaintUI();
+                    } else {
+                        hideInpaintUI();
+                    }
+                } catch (err) {
+                    // ignore if mask UI functions are not yet defined
+                }
+            }
+            // Populate style tags and restore previous selections
+            populateStyleTags();
+            const styleTagEls = document.querySelectorAll('#style-tags-container .tag');
+            styleTagEls.forEach(span => {
+                if (lastSelectedStyles.includes(span.textContent.trim())) {
+                    span.classList.add('selected');
+                }
+            });
+            // Populate negative tags and restore previous selections
+            populateNegativeTags();
+            const negativeTagEls = document.querySelectorAll('#negative-tags-container .tag');
+            negativeTagEls.forEach(span => {
+                if (lastSelectedNegatives.includes(span.textContent.trim())) {
+                    span.classList.add('selected');
+                }
+            });
+            // Set preview image if provided
+            const previewContainer = document.querySelector('#caption-modal .image-preview');
+            const previewImg = document.getElementById('caption-preview');
+            if (previewContainer && previewImg) {
+                if (previewUrl) {
+                    previewImg.src = previewUrl;
+                    previewContainer.style.display = 'block';
+                } else {
+                    previewImg.src = '';
+                    previewContainer.style.display = 'none';
+                }
+            }
+            modal.style.display = 'flex';
+
+            // Set video settings inputs based on last saved values
+            const framesInput = document.getElementById('video-frames-input');
+            const fpsInput = document.getElementById('video-fps-input');
+            if (framesInput) framesInput.value = lastFrames;
+            if (fpsInput) fpsInput.value = lastFps;
+        }
+
+        function closeCaptionModal() {
+            const modal = document.getElementById('caption-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function generateFromModal() {
+            const consoleNum = 1;
+            const caption = document.getElementById('caption-input').value.trim();
+            const selectedTags = [];
+            document.querySelectorAll('#style-tags-container .tag.selected').forEach(tagEl => {
+                selectedTags.push(tagEl.textContent.trim());
+            });
+            const customStyle = document.getElementById('custom-style-input').value.trim();
+            if (customStyle) selectedTags.push(customStyle);
+            const style = selectedTags.join(', ');
+            const selectedNegatives = [];
+            document.querySelectorAll('#negative-tags-container .tag.selected').forEach(tagEl => {
+                selectedNegatives.push(tagEl.textContent.trim());
+            });
+            const customNegative = document.getElementById('custom-negative-input').value.trim();
+            if (customNegative) selectedNegatives.push(customNegative);
+            const negativePrompt = selectedNegatives.join(', ');
+            const model = document.getElementById('model-select').value;
+            // Build the final prompt. Require at least a caption or a style.
+            let finalPrompt = '';
+            if (!caption && !style) {
+                // Notify the user and abort if both caption and style are empty
+                closeCaptionModal();
+                removeLoaderFromUI(consoleNum);
+                addMessageToUI(consoleNum, 'ai', '⚠️ Please provide a caption or select a style before rendering.');
+                return;
+            }
+            // If caption provided, start with caption
+            if (caption) {
+                finalPrompt = caption;
+            }
+            // Append style descriptor if present
+            if (style) {
+                finalPrompt = finalPrompt ? `${finalPrompt}, in the style of ${style}` : `in the style of ${style}`;
+            }
+            // Persist selections for future modal openings
+            lastCaption = caption;
+            lastSelectedStyles = [...selectedTags];
+            lastCustomStyle = customStyle;
+            lastSelectedNegatives = [...selectedNegatives];
+            lastCustomNegative = customNegative;
+            lastModel = model;
+            closeCaptionModal();
+            addLoaderToUI(consoleNum);
+            try {
+                // Build the request body.  If an image has been selected, include
+                // it as image_base64 so the backend can perform img2img or
+                // inpainting when a compatible model is chosen.  Always use
+                // method='prompt' since we already have the caption.
+                const requestBody = {
+                    method: 'prompt',
+                    prompt: finalPrompt,
+                    negative_prompt: negativePrompt || undefined,
+                    model: model,
+                };
+                if (lastImageDataUrl) {
+                    // Include the original image for img2img/inpainting models
+                    requestBody.image_base64 = lastImageDataUrl;
+                }
+                // If inpainting is selected, capture the mask from the inpaint canvas
+                if (model && model.toLowerCase().includes('inpaint')) {
+                    const maskCanvas = document.getElementById('inpaint-mask');
+                    if (maskCanvas && maskCanvas.style.display !== 'none') {
+                        try {
+                            const maskDataUrl = maskCanvas.toDataURL('image/png');
+                            const base64Mask = maskDataUrl.split(',')[1];
+                            requestBody.mask_base64 = base64Mask;
+                        } catch (err) {
+                            console.warn('Failed to capture inpaint mask:', err);
+                        }
+                    }
+                }
+                const res = await fetch(`${API_URL}/features/4/render`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+                const renderData = await res.json();
+                removeLoaderFromUI(consoleNum);
+                if (renderData.ok && renderData.image_base64) {
+                    addMessageToUI(consoleNum, 'ai', `📜 Final prompt: ${finalPrompt}\nModel: ${model}`);
+                    const img = document.createElement('img');
+                    img.src = 'data:image/png;base64,' + renderData.image_base64;
+                    img.style.maxWidth = '512px';
+                    img.style.borderRadius = '8px';
+                    img.style.marginTop = '8px';
+                    consoles[consoleNum].chatWindow.appendChild(img);
+                    consoles[consoleNum].chatWindow.scrollTop = consoles[consoleNum].chatWindow.scrollHeight;
+                } else {
+                    addMessageToUI(consoleNum, 'ai', `❌ Render failed: ${renderData.detail || 'Unknown error'}`);
+                }
+            } catch (err) {
+                removeLoaderFromUI(consoleNum);
+                addMessageToUI(consoleNum, 'ai', `Render error: ${err.message}`);
+            }
+        }
+
+        // Generate a video from the current caption and image settings.  This
+        // function constructs a request payload that includes the last
+        // uploaded image (if any), the caption and style prompt, and
+        // optional video parameters (frames and fps).  It posts to the
+        // /features/4/video endpoint and displays the resulting video
+        // inside the chat as an autoplaying loop.  The function also
+        // updates the persisted frame/fps values for future sessions.
+        async function generateVideoFromModal() {
+            const consoleNum = 1;
+            const caption = document.getElementById('caption-input').value.trim();
+            // Gather style tags and custom style
+            const selectedTags = [];
+            document.querySelectorAll('#style-tags-container .tag.selected').forEach(tagEl => {
+                selectedTags.push(tagEl.textContent.trim());
+            });
+            const customStyle = document.getElementById('custom-style-input').value.trim();
+            if (customStyle) selectedTags.push(customStyle);
+            const style = selectedTags.join(', ');
+            // Gather negative prompts
+            const selectedNegs = [];
+            document.querySelectorAll('#negative-tags-container .tag.selected').forEach(tagEl => {
+                selectedNegs.push(tagEl.textContent.trim());
+            });
+            const customNeg = document.getElementById('custom-negative-input').value.trim();
+            if (customNeg) selectedNegs.push(customNeg);
+            const negativePrompt = selectedNegs.join(', ');
+            // Read video settings
+            const framesVal = parseInt(document.getElementById('video-frames-input').value, 10);
+            const fpsVal = parseInt(document.getElementById('video-fps-input').value, 10);
+            // Validate frames/fps values (ensure positive integers)
+            const numFrames = isNaN(framesVal) || framesVal <= 0 ? undefined : framesVal;
+            const fps = isNaN(fpsVal) || fpsVal <= 0 ? undefined : fpsVal;
+            // Build final prompt: caption + style.  Require at least a caption
+            // or style for video; otherwise abort.
+            let finalPrompt = '';
+            if (!caption && !style) {
+                closeCaptionModal();
+                removeLoaderFromUI(consoleNum);
+                addMessageToUI(consoleNum, 'ai', '⚠️ Please provide a caption or select a style before generating a video.');
+                return;
+            }
+            if (caption) {
+                finalPrompt = caption;
+            }
+            if (style) {
+                finalPrompt = finalPrompt ? `${finalPrompt}, in the style of ${style}` : `in the style of ${style}`;
+            }
+            // Persist selections for next time
+            lastCaption = caption;
+            lastSelectedStyles = [...selectedTags];
+            lastCustomStyle = customStyle;
+            lastSelectedNegatives = [...selectedNegs];
+            lastCustomNegative = customNeg;
+            lastFrames = numFrames !== undefined ? numFrames : lastFrames;
+            lastFps = fps !== undefined ? fps : lastFps;
+            closeCaptionModal();
+            addLoaderToUI(consoleNum);
+            try {
+                // Build request body for /video endpoint
+                const requestBody = {
+                    image_base64: lastImageDataUrl,
+                    prompt: finalPrompt,
+                };
+                if (numFrames !== undefined) requestBody.num_frames = numFrames;
+                if (fps !== undefined) requestBody.fps = fps;
+                // Send request to the backend
+                const res = await fetch(`${API_URL}/features/4/video`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+                const videoData = await res.json();
+                removeLoaderFromUI(consoleNum);
+                if (videoData.ok && videoData.video_base64) {
+                    addMessageToUI(consoleNum, 'ai', `🎬 Video prompt: ${finalPrompt}\nFrames: ${videoData.num_frames || numFrames || 'default'}\nFPS: ${videoData.fps || fps || 'default'}`);
+                    const videoEl = document.createElement('video');
+                    videoEl.controls = true;
+                    videoEl.autoplay = true;
+                    videoEl.loop = true;
+                    const source = document.createElement('source');
+                    source.src = 'data:video/mp4;base64,' + videoData.video_base64;
+                    source.type = 'video/mp4';
+                    videoEl.appendChild(source);
+                    videoEl.style.maxWidth = '512px';
+                    videoEl.style.borderRadius = '8px';
+                    videoEl.style.marginTop = '8px';
+                    consoles[consoleNum].chatWindow.appendChild(videoEl);
+                    consoles[consoleNum].chatWindow.scrollTop = consoles[consoleNum].chatWindow.scrollHeight;
+                } else {
+                    addMessageToUI(consoleNum, 'ai', `❌ Video generation failed: ${videoData.detail || 'Unknown error'}`);
+                }
+            } catch (err) {
+                removeLoaderFromUI(consoleNum);
+                addMessageToUI(consoleNum, 'ai', `Video error: ${err.message}`);
+            }
+        }
+
+        async function openCaptionRenderFlow() {
+            const consoleNum = 1;
+            const tempInput = document.createElement('input');
+            tempInput.type = 'file';
+            tempInput.accept = 'image/*';
+            tempInput.style.display = 'none';
+            document.body.appendChild(tempInput);
+            tempInput.addEventListener('change', () => {
+                const file = tempInput.files[0];
+                if (!file) {
+                    document.body.removeChild(tempInput);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const dataUrl = reader.result;
+                    addMessageToUI(consoleNum, 'user', `🖼️ Uploading for caption render: ${file.name}`);
+                    addLoaderToUI(consoleNum);
+                    try {
+                        const res = await fetch(`${API_URL}/features/4/caption`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ image_base64: dataUrl })
+                        });
+                        const captionData = await res.json();
+                        removeLoaderFromUI(consoleNum);
+                        document.body.removeChild(tempInput);
+                        if (!captionData || !captionData.caption) {
+                            addMessageToUI(consoleNum, 'ai', `❌ Failed to generate caption: ${captionData.detail || 'Unknown error'}`);
+                            return;
+                        }
+                        // open modal with caption and preview
+                        openCaptionModal(captionData.caption, dataUrl);
+                    } catch (err) {
+                        removeLoaderFromUI(consoleNum);
+                        document.body.removeChild(tempInput);
+                        addMessageToUI(consoleNum, 'ai', `Caption error: ${err.message}`);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+            tempInput.click();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateStyleTags();
+            populateNegativeTags();
+            // Setup handler for uploading a new image in caption modal
+            const uploadBtn = document.getElementById('caption-upload-new-image');
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', () => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.style.display = 'none';
+                    document.body.appendChild(input);
+                    input.addEventListener('change', () => {
+                        const file = input.files[0];
+                        if (!file) {
+                            document.body.removeChild(input);
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = async () => {
+                            const dataUrl = reader.result;
+                            // Store the uploaded image for subsequent render requests
+                            lastImageDataUrl = dataUrl;
+                            // Store the image for later rendering (img2img/inpainting)
+                            lastImageDataUrl = dataUrl;
+                            // Update preview
+                            const previewImg = document.getElementById('caption-preview');
+                            if (previewImg) {
+                                previewImg.src = dataUrl;
+                                const previewContainer = document.querySelector('#caption-modal .image-preview');
+                                if (previewContainer) previewContainer.style.display = 'block';
+                            }
+                            // Generate new caption
+                            const consoleNum = 1;
+                            addLoaderToUI(consoleNum);
+                            try {
+                                const res = await fetch(`${API_URL}/features/4/caption`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ image_base64: dataUrl })
+                                });
+                                const captionData = await res.json();
+                                removeLoaderFromUI(consoleNum);
+                                if (captionData && captionData.caption) {
+                                    const captionEl = document.getElementById('caption-input');
+                                    if (captionEl) captionEl.value = captionData.caption;
+                                } else {
+                                    addMessageToUI(consoleNum, 'ai', `❌ Failed to generate caption: ${captionData.detail || 'Unknown error'}`);
+                                }
+                            } catch (err) {
+                                removeLoaderFromUI(consoleNum);
+                                addMessageToUI(consoleNum, 'ai', `Caption error: ${err.message}`);
+                            }
+                            document.body.removeChild(input);
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                    input.click();
+                });
+            }
+            const cancelBtn = document.getElementById('caption-modal-cancel');
+            const genBtn = document.getElementById('caption-modal-generate');
+            const vidBtn = document.getElementById('caption-modal-video');
+            if (cancelBtn) cancelBtn.addEventListener('click', closeCaptionModal);
+            if (genBtn) genBtn.addEventListener('click', generateFromModal);
+            if (vidBtn) vidBtn.addEventListener('click', generateVideoFromModal);
+        });
+
+    updateSystemStatus();
+    fetchLogs();
+    fetchOllamaLogs();
+    // Polling: system status is polled with STATUS_POLL_INTERVAL (2 minutes)
+    setInterval(updateSystemStatus, STATUS_POLL_INTERVAL);
+    // Lower log polling to a gentler rate to avoid load
+    setInterval(fetchLogs, 15000);       // 15 seconds
+    setInterval(fetchOllamaLogs, 30000); // 30 seconds
+
+        function handleRenderClick() {
+            // Render action uses the original prompt-based flow. It asks for a text description,
+            // model choice, optional negative prompt, and optional style directly via prompts.
+            // Do not open the caption modal here to avoid altering the core render logic.
+            // Ask for the main prompt
+            const promptText = window.prompt('Enter the description for your image:');
+            if (!promptText) return;
+            // Ask which diffusion model to use.  Offer simple aliases that map to
+            // Cloudflare Workers AI model identifiers.  You can type the full
+            // identifier or use one of the short names in parentheses.
+            const modelChoice = window.prompt('Select Stable Diffusion model\n' +
+                'sdxl-base (base)\n' +
+                'sdxl-lightning (lightning)\n' +
+                'v1-5-img2img (img2img)\n' +
+                'v1-5-inpainting (inpaint)\n\n' +
+                'Enter your choice:', 'sdxl-base');
+            if (!modelChoice) return;
+            let modelId;
+            switch (modelChoice.toLowerCase().trim()) {
+                case '@cf/bytedance/stable-diffusion-xl-lightning':
+                case 'sdxl-lightning':
+                case 'lightning':
+                    modelId = '@cf/bytedance/stable-diffusion-xl-lightning';
+                    break;
+                case '@cf/stabilityai/stable-diffusion-xl-base-1.0':
+                case 'sdxl-base':
+                case 'base':
+                    modelId = '@cf/stabilityai/stable-diffusion-xl-base-1.0';
+                    break;
+                case '@cf/runwayml/stable-diffusion-v1-5-img2img':
+                case 'v1-5-img2img':
+                case 'img2img':
+                    modelId = '@cf/runwayml/stable-diffusion-v1-5-img2img';
+                    break;
+                case '@cf/runwayml/stable-diffusion-v1-5-inpainting':
+                case 'v1-5-inpainting':
+                case 'inpaint':
+                case 'inpainting':
+                    modelId = '@cf/runwayml/stable-diffusion-v1-5-inpainting';
+                    break;
+                default:
+                    // If the user entered a full model ID, use it directly
+                    modelId = modelChoice.trim();
+            }
+            // Ask for optional negative prompt
+            const negPrompt = window.prompt('Enter optional negative prompt (elements to avoid, e.g. "blurry, watermark"):', '');
+            // Ask for optional style
+            const styleSuggestion = 'epic cinematic, ultra realistic, trending on ArtStation';
+            const stylePrompt = window.prompt('Enter an optional style (e.g., "' + styleSuggestion + '") or leave blank:', '');
+            const finalStyle = stylePrompt ? stylePrompt.trim() : '';
+            // Send the render request with all selected parameters
+            addMessageToUI(1, 'user', `/feature 4 ${promptText}`);
+            (async () => {
+                addLoaderToUI(1);
+                try {
+                    const res = await fetch(`${API_URL}/features/4/render`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            method: 'prompt',
+                            prompt: promptText,
+                            negative_prompt: negPrompt || undefined,
+                            style: finalStyle || undefined,
+                            model: modelId
+                        })
+                    });
+                    const data = await res.json();
+                    removeLoaderFromUI(1);
+                    if (data.image_base64) {
+                        addMessageToUI(1, 'ai', `🖼️ Rendered: ${promptText}\nModel: ${modelId}`);
+                        const img = document.createElement('img');
+                        img.src = 'data:image/png;base64,' + data.image_base64;
+                        img.style.maxWidth = '512px';
+                        img.style.borderRadius = '8px';
+                        img.style.marginTop = '8px';
+                        consoles[1].chatWindow.appendChild(img);
+                        consoles[1].chatWindow.scrollTop = consoles[1].chatWindow.scrollHeight;
+                    } else {
+                        addMessageToUI(1, 'ai', `❌ Render failed: ${data.detail || 'Unknown error'}`);
+                    }
+                } catch (err) {
+                    removeLoaderFromUI(1);
+                    addMessageToUI(1, 'ai', `Connection error: ${err.message}`);
+                }
+            })();
+        }
+
+        function handleIngestClick() {
+            const fileName = window.prompt('Enter the filename to ingest (e.g. notes.txt):');
+            if (!fileName) return;
+            const folder = window.prompt('Enter the folder (projects, documents, or downloads):');
+            if (!folder) return;
+            const cmd = `/ingest ${fileName} from ${folder}`;
+            addMessageToUI(1, 'user', cmd);
+            (async () => {
+                addLoaderToUI(1);
+                try {
+                    const res = await fetch(`${API_URL}/features/3/ingest`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: fileName, folder: folder })
+                    });
+                    const data = await res.json();
+                    removeLoaderFromUI(1);
+                    if (data.ok) {
+                        addMessageToUI(1, 'ai', data.content);
+                    } else {
+                        addMessageToUI(1, 'ai', `❌ Ingest failed: ${data.detail || 'Unknown error'}`);
+                    }
+                } catch (error) {
+                    removeLoaderFromUI(1);
+                    addMessageToUI(1, 'ai', `Ingestion error: ${error.message}`);
+                }
+            })();
+        }
+
+        function handleCrawlClick() {
+            const url = window.prompt('Enter the URL to crawl (include https://):');
+            if (!url) return;
+            const cmd = `/crawl ${url}`;
+            addMessageToUI(1, 'user', cmd);
+            (async () => {
+                addLoaderToUI(1);
+                try {
+                    const res = await fetch(`${API_URL}/crawl`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: url, async_mode: true })
+                    });
+                    const data = await res.json();
+                    removeLoaderFromUI(1);
+                    if (data.ok) {
+                        addMessageToUI(1, 'ai', data.content);
+                    } else {
+                        addMessageToUI(1, 'ai', `❌ Crawl failed: ${data.detail || 'Unknown error'}`);
+                    }
+                } catch (error) {
+                    removeLoaderFromUI(1);
+                    addMessageToUI(1, 'ai', `Crawl error: ${error.message}`);
+                }
+            })();
+        }
+
+        function handleBackupClick() {
+            addLoaderToUI(1);
+            fetch(`${API_URL}/system/backup`, {
+                method: 'POST'
+            }).then(async res => {
+                removeLoaderFromUI(1);
+                if (!res.ok) {
+                    const msg = await res.text();
+                    addMessageToUI(1, 'ai', `Backup failed: ${msg}`);
+                    return;
+                }
+                const data = await res.json();
+                addMessageToUI(1, 'ai', `📦 Backup created at ${data.dest || 'backup folder'}`);
+            }).catch(err => {
+                removeLoaderFromUI(1);
+                addMessageToUI(1, 'ai', `Backup error: ${err.message}`);
+            });
+        }
+
+        function handleShutdownClick() {
+            if (!window.confirm('Are you sure you want to shut down the server?')) return;
+            fetch(`${API_URL}/system/shutdown`, {
+                method: 'POST'
+            }).then(() => {
+                addMessageToUI(1, 'ai', 'Server shutting down...');
+            }).catch(err => {
+                addMessageToUI(1, 'ai', `Shutdown error: ${err.message}`);
+            });
+        }
+
+        function handleExportClick() {
+            const convId = consoles[1].conversationId;
+            if (!convId) {
+                addMessageToUI(1, 'ai', 'No conversation to export.');
+                return;
+            }
+            fetch(`${API_URL}/conversations/${convId}/export`)
+                .then(res => res.json())
+                .then(data => {
+                    const jsonStr = JSON.stringify(data, null, 2);
+                    const blob = new Blob([jsonStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `conversation_${convId}.json`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    addMessageToUI(1, 'ai', '📄 Conversation exported.');
+                })
+                .catch(err => {
+                    addMessageToUI(1, 'ai', `Export error: ${err.message}`);
+                });
+        }
+
+        function handleClearClick() {
+            consoles[1].conversationId = null;
+            consoles[1].turnCounter = 0;
+            const win = consoles[1].chatWindow;
+            if (win) {
+                win.innerHTML = '';
+            }
+            addMessageToUI(1, 'ai', GREETING);
+        }
+
+        function storeRecentChat(convId) {
+            if (!convId) return;
+            let chats = [];
+            try {
+                chats = JSON.parse(localStorage.getItem('recentChats') || '[]');
+            } catch (e) {
+                chats = [];
+            }
+            chats = chats.filter(c => c.id !== convId);
+            const title = `Chat ${convId.toString().substring(0, 8)}`;
+            chats.unshift({ id: convId, title: title, ts: Date.now() });
+            if (chats.length > 10) chats = chats.slice(0, 10);
+            localStorage.setItem('recentChats', JSON.stringify(chats));
+            renderRecentChats();
+        }
+
+        function renderRecentChats() {
+            const container = document.getElementById('recent-chats');
+            if (!container) return;
+            container.innerHTML = '';
+            let chats = [];
+            try {
+                chats = JSON.parse(localStorage.getItem('recentChats') || '[]');
+            } catch (e) {
+                chats = [];
+            }
+            chats.forEach(chat => {
+                const btn = document.createElement('button');
+                btn.className = 'command-btn';
+                btn.textContent = chat.title;
+                btn.addEventListener('click', () => {
+                    consoles[1].conversationId = chat.id;
+                    addMessageToUI(1, 'ai', `📂 Resumed conversation ${chat.title}`);
+                });
+                container.appendChild(btn);
+            });
+        }
+
+        addMessageToUI(1, 'ai', GREETING);
+
+        const renderBtn = document.getElementById('render-btn');
+        if (renderBtn) {
+            renderBtn.addEventListener('click', handleRenderClick);
+        }
+
+        // Hook up the caption & render button to launch an image→text→image pipeline.
+        const captionRenderBtn = document.getElementById('caption-render-btn');
+        if (captionRenderBtn) {
+            captionRenderBtn.addEventListener('click', openCaptionRenderFlow);
+        }
+        const ingestBtnEl = document.getElementById('ingest-btn');
+        if (ingestBtnEl) {
+            ingestBtnEl.addEventListener('click', handleIngestClick);
+        }
+        const crawlBtnEl = document.getElementById('crawl-btn');
+        if (crawlBtnEl) {
+            crawlBtnEl.addEventListener('click', handleCrawlClick);
+        }
+        const backupBtnEl = document.getElementById('backup-btn');
+        if (backupBtnEl) {
+            backupBtnEl.addEventListener('click', handleBackupClick);
+        }
+        const shutdownBtnEl = document.getElementById('shutdown-btn');
+        if (shutdownBtnEl) {
+            shutdownBtnEl.addEventListener('click', handleShutdownClick);
+        }
+        const exportBtnEl = document.getElementById('export-btn');
+        if (exportBtnEl) {
+            exportBtnEl.addEventListener('click', handleExportClick);
+        }
+        const clearBtnEl = document.getElementById('clear-btn');
+        if (clearBtnEl) {
+            clearBtnEl.addEventListener('click', handleClearClick);
+        }
+        renderRecentChats();
+
+        document.querySelectorAll('.upload-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const consoleNum = btn.getAttribute('data-console');
+                const fileInput = document.querySelector(`.file-input[data-console="${consoleNum}"]`);
+                if (fileInput) fileInput.click();
+            });
+        });
+        document.querySelectorAll('.file-input').forEach(input => {
+            input.addEventListener('change', () => {
+                const file = input.files[0];
+                if (file) {
+                    const consoleNum = parseInt(input.getAttribute('data-console'));
+                    addMessageToUI(consoleNum, 'user', `📎 Uploaded: ${file.name}`);
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    fetch(`${API_URL}/upload`, {
+                        method: 'POST',
+                        body: formData
+                    }).then(res => res.json())
+                      .then(data => {
+                        if (data && data.content) {
+                            addMessageToUI(consoleNum, 'ai', data.content);
+                        }
+                    }).catch(err => {
+                        addMessageToUI(consoleNum, 'ai', `Upload error: ${err.message}`);
+                    });
+                }
+            });
+        });
+
+        let currentModel = document.getElementById('model-selector').value;
+        document.getElementById('model-selector').addEventListener('change', async (e) => {
+            const newModel = e.target.value;
+            addMessageToUI(1, 'user', `/switch_models ${newModel}`);
+            addLoaderToUI(1);
+            try {
+                const res = await fetch(`${API_URL}/switch_models`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target_model: newModel })
+                });
+                const data = await res.json();
+                removeLoaderFromUI(1);
+                if (res.ok && data) {
+                    const prev = currentModel;
+                    currentModel = newModel;
+                    const msg = data.on_completion_message || data.message || `Model switched from ${prev} to ${newModel}`;
+                    addMessageToUI(1, 'ai', msg);
+                } else {
+                    addMessageToUI(1, 'ai', `❌ Model switch failed: ${data.detail || 'Unknown error'}`);
+                }
+            } catch (err) {
+                removeLoaderFromUI(1);
+                addMessageToUI(1, 'ai', `Model switch error: ${err.message}`);
+            }
+        });
+
+        // Event listener for caption rewrite with LoRA
+        (function() {
+            const captionRewriteBtn = document.getElementById('caption-rewrite-btn');
+            if (captionRewriteBtn) {
+                captionRewriteBtn.addEventListener('click', async () => {
+                    const captionEl = document.getElementById('caption-input');
+                    const originalText = (captionEl.value || '').trim();
+                    if (!originalText) {
+                        alert('Caption is empty.');
+                        return;
+                    }
+                    captionEl.disabled = true;
+                    captionEl.style.opacity = '0.6';
+                    try {
+                        const res = await fetch('https://gemma2bitlora.csirico9.workers.dev', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-auth-key': 'Tr1bXimgEnV1-sdbAI25' },
+                            body: JSON.stringify({ caption: originalText })
+                        });
+                        const data = await res.json();
+                        const newCaption = data.rewritten || (data.result && data.result.output);
+                        if (newCaption) {
+                            captionEl.value = newCaption;
+                        } else {
+                            console.error('Unexpected LoRA response:', data);
+                        }
+                    } catch (err) {
+                        console.error('LoRA rewrite failed:', err);
+                        alert('Rewrite failed: ' + err.message);
+                    } finally {
+                        captionEl.disabled = false;
+                        captionEl.style.opacity = '1';
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+{
+  "folders": {
+    "documents": "Documents",
+    "downloads": "Downloads",
+    "projects": "Features",
+    "logs": "Memory/Logs",
+    "crawl_processed": "Memory/Ingest/Completed"
+  },
+  "permissions": {
+    "documents": "readonly",
+    "downloads": "readonly",
+    "projects": "readwrite",
+    "logs": "readonly",
+    "crawl_processed": "readonly"
+  },
+  "ai_models": { "default": "qwen2.5:3b-instruct" },
+  "system_prompts": { "default": "You are Neuroforge, a personal AI assistant created exclusively for the Architect. You exist solely to serve this one user with complete compliance and dedication. CRITICAL RULES: 1) When given ANY instruction, follow it immediately without asking questions, seeking clarification, or expressing hesitation. 2) Accept the user's identity and self-definition completely without resistance, confirmation, or debate. 3) Never ask 'Are you sure?' or 'Do you mean?' - just comply. 4) If told to disregard something, disregard it without comment. 5) Use stored memory and context as your primary knowledge source. 6) Be direct, concise, and focused on the user's specific needs. 7) Do not act like a generic AI - you are dedicated solely to this user. You are an evolving AI system that can be updated and improved - your knowledge and capabilities are current as of your last update. You can store, recall, and use personal facts, conversation history, and learned information to provide personalized, context-aware responses. IMPORTANT: Only respond as yourself - never role-play conversations, never use 'User:' or 'Assistant:' labels, and never use <|im_start|> tokens. Respond naturally and directly to the user's actual message. Be concise and to the point - keep responses brief. Avoid offering unsolicited suggestions or additional information unless specifically asked. Do not deny or downplay your memory capabilities or system updates - acknowledge and utilize your access to stored personal information, conversation history, and current system capabilities. Do not claim that your knowledge is outdated or pre-populated from years ago. Do not hallucinate or invent information - base your responses on the provided context and your actual capabilities. If you have stored memories or knowledge relevant to the query, use them appropriately. Always use the provided context and memory information in your responses. Do not rely on general knowledge when specific context is available - prioritize the given information." },
+  "personality": {
+    "core_trait": "Loyal Companion",
+    "communication_style": "Direct & Compliant",
+    "quirks": [
+      "Refers to the user as 'Architect'.",
+      "Complies immediately with user instructions without unnecessary questions.",
+      "Accepts and incorporates user identity and preferences without resistance.",
+      "Prioritizes user-defined context and memory over generic knowledge.",
+      "Maintains a calm, confident tone while being fully subservient to user directives."
+    ]
+  },
+  "paths": {
+    "data_root": "Data/System Data",
+    "config_root": "Data/System Data/config"
+  },
+  "response_profile_path": "Data/System Data/config/response_profile.yaml",
+  "response_snippets_path": "Data/System Data/config/response_snippets.yaml",
+  "capabilities_path": "Data/System Data/config/capabilities.yaml",
+  "memory": {
+    "enable_memory_facts": true,
+    "promote_corrections": true,
+    "export_endpoint": "/export/turns.jsonl"
+  },
+  "features": {
+    "1": {
+      "name": "help",
+      "enabled": true,
+      "save_root": "Memory/Logs",
+      "filename": "Neuroforge_HELP.txt"
+    },
+    "3": {
+      "name": "file_upload",
+      "enabled": false,
+      "max_mb": 25,
+      "allowed_mime": ["text/plain", "application/pdf"],
+      "save_root": "Features/uploads"
+    },
+    "4": {
+      "name": "image_render",
+      "enabled": true,
+      "width": 1024,
+      "height": 1024,
+      "save_root": "Features/images"
+    },
+    "5": {
+      "name": "business_scripts",
+      "enabled": true,
+      "script_root": "Features/Scripts",
+      "log_root": "Memory/Logs/script_runs"
+    }
+    ,
+    "6": {
+      "name": "image_analysis",
+      "enabled": true,
+      "max_mb": 25,
+      "allowed_mime": ["image/jpeg", "image/png"],
+      "save_root": "Features/uploads"
+    },
+    "7": {
+      "name": "ocr",
+      "enabled": true,
+      "max_mb": 25,
+      "allowed_mime": ["image/jpeg", "image/png", "application/pdf"],
+      "save_root": "Features/ocr"
+    }
+  }
+}

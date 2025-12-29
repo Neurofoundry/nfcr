@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+requests
+PyYAML
+beautifulsoup4
+pillow
+numpy
+python-dotenv
