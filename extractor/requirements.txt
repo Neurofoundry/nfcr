@@ -1,6 +1,7 @@
 flask
 flask-cors
 rembg
+onnxruntime
 pillow
 numpy
 scipy
