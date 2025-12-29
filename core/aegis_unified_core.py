@@ -1738,7 +1738,7 @@ def act(
 
 # ======================== 5. Server Runner ========================
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", "8080"))
+    port = 8080
     logging.info(f"Neuroforge Unified AI Core launching on http://localhost:{port}")
-    uvicorn.run("aegis_unified_core:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("aegis_unified_core:app", host="0.0.0.0", port=port, reload=True)
 
