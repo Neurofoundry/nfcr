@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
-from rembg import remove
+from rembg import remove, new_session
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps
 import io
 import base64
@@ -9,16 +9,6 @@ import logging
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import requests  # For calling ControlNet service
-
-# Render API configuration (defaults to local core API).
-RENDER_API_URL = os.environ.get(
-    "RENDER_API_URL",
-    "http://localhost:8080/features/4/render",
-)
-RENDER_API_BASE_URL = os.environ.get(
-    "RENDER_API_BASE_URL",
-    "http://localhost:8080",
-)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +22,7 @@ COMPOSED_DIR = "composed_images"
 STATIC_DIR = os.path.dirname(os.path.abspath(__file__))
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(COMPOSED_DIR, exist_ok=True)
+REMBG_SESSION = new_session("u2netp")
 
 # Serve static HTML files
 @app.route('/')
@@ -90,7 +81,7 @@ def extract_subject():
         logger.info(f'Input image: {input_image.size}, {input_image.mode}')
         
         # Remove background using U²-Net
-        output_image = remove(input_image)
+        output_image = remove(input_image, session=REMBG_SESSION)
         logger.info('Background removed successfully')
         
         # Convert to base64
@@ -261,7 +252,7 @@ def compose_with_controlnet(subject_img, scene_img, style_img, scene_analysis, s
                 'strength': strength
             }
             
-            response = requests.post(RENDER_API_URL,
+            response = requests.post('http://localhost:8080/features/4/render', 
                 json=payload,
                 headers={'Content-Type': 'application/json'},
                 timeout=120
@@ -278,7 +269,7 @@ def compose_with_controlnet(subject_img, scene_img, style_img, scene_analysis, s
                 return decode_base64_image(img_data)
             elif result.get('image_path') or result.get('saved_as'):
                 imagePath = result.get('image_path') or result.get('saved_as')
-                imageUrl = f"{RENDER_API_BASE_URL}/{imagePath.replace(chr(92), '/')}"
+                imageUrl = f"http://localhost:8080/{imagePath.replace(chr(92), '/')}"
                 img_response = requests.get(imageUrl, timeout=30)
                 return Image.open(io.BytesIO(img_response.content))
             else:
@@ -718,27 +709,28 @@ def add_edge_blur(subject):
     return Image.merge('RGBA', (r, g, b, Image.fromarray(alpha_arr)))
 
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", "5001"))
+if __name__ == '__main__':
     print("="*60)
-    print("?? Subject Extractor & Composer Service")
+    print("🎨 Subject Extractor & Composer Service")
     print("="*60)
-    print(f"?? Local:   http://localhost:{port}")
-    print(f"?? Network: http://0.0.0.0:{port}")
+    print("📍 Local:   http://localhost:5001")
+    print("📍 Network: http://0.0.0.0:5001")
     print("="*60)
-    print("?? Endpoints:")
+    print("💡 Endpoints:")
     print("   GET  /              - Test interface")
     print("   POST /extract       - Remove background from image")
     print("   POST /compose       - Compose subject + scene + style")
     print("   GET  /health        - Check service status")
     print("="*60)
-    if not os.environ.get("RENDER_SERVICE_ID"):
-        print("\n? Opening browser automatically...\n")
-        import webbrowser
-        import threading
-        def open_browser():
-            import time
-            time.sleep(1.5)
-            webbrowser.open(f"http://localhost:{port}")
-        threading.Thread(target=open_browser, daemon=True).start()
-    app.run(host="0.0.0.0", port=port, debug=False, threaded=True)
+    print("\n✨ Opening browser automatically...\n")
+    
+    # Auto-open browser
+    import webbrowser
+    import threading
+    def open_browser():
+        import time
+        time.sleep(1.5)
+        webbrowser.open('http://localhost:5001')
+    threading.Thread(target=open_browser, daemon=True).start()
+    
+    app.run(host='0.0.0.0', port=5001, debug=False, threaded=True)
