@@ -15,7 +15,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)  # Allow all origins for now - restrict in production
+ALLOWED_ORIGINS = ["https://forge.theneurofoundry.com"]
+CORS(app, resources={r"/*": {"origins": ALLOWED_ORIGINS}})
 
 OUTPUT_DIR = "extracted_subjects"
 COMPOSED_DIR = "composed_images"
