@@ -72,7 +72,7 @@ VIDEO_API_KEY = CAPTION_API_KEY
 _BLIP_PROCESSOR = None
 _BLIP_MODEL = None
 
-def caption_image(image_bytes: bytes) -> str:
+def caption_image(image_bytes: bytes, instruction: str = "") -> str:
     """
     Generate a descriptive caption for the given image bytes using the
     configured captioning API.  This function sends the raw image to
@@ -99,6 +99,8 @@ def caption_image(image_bytes: bytes) -> str:
     payload = {
         "image_base64": base64.b64encode(image_bytes).decode("utf-8")
     }
+    if instruction:
+        payload["instruction"] = instruction
     # Attempt remote captioning first.  If the remote call fails (for example
     # due to a network issue or the API returns an error), fall back to a local
     # captioner using the transformers library.  The local captioner will
@@ -519,6 +521,9 @@ def register(app, feature_cfg: dict, routing_path: str):
         except Exception as e:
             raise HTTPException(400, f"Invalid JSON: {e}")
         image_b64 = data.get("image_base64")
+        instruction = data.get("instruction", "")
+        if not isinstance(instruction, str):
+            instruction = ""
         if not image_b64:
             raise HTTPException(400, "image_base64 is required")
         # Strip data URL prefix if present
@@ -529,7 +534,7 @@ def register(app, feature_cfg: dict, routing_path: str):
         except Exception:
             raise HTTPException(400, "image_base64 is not valid base64")
         try:
-            caption = caption_image(image_bytes)
+            caption = caption_image(image_bytes, instruction.strip())
         except Exception as e:
             logging.error(f"Caption generation failed: {e}")
             raise HTTPException(500, f"Caption generation failed: {e}")
@@ -590,6 +595,10 @@ def register(app, feature_cfg: dict, routing_path: str):
             except ValueError:
                 raise HTTPException(400, "seed must be an integer")
         style = data.get("style", "").strip()
+        instruction = data.get("instruction", "")
+        if not isinstance(instruction, str):
+            instruction = ""
+        instruction = instruction.strip()
         # Optional model identifier to select a specific diffusion backend
         model = data.get("model")
         if model is not None:
@@ -622,7 +631,7 @@ def register(app, feature_cfg: dict, routing_path: str):
                     raise HTTPException(400, "image_base64 is not valid base64")
                 # Generate a caption using the configured API
                 try:
-                    caption = caption_image(image_bytes)
+                    caption = caption_image(image_bytes, instruction)
                 except Exception as e:
                     logging.error(f"Caption generation failed: {e}")
                     raise HTTPException(500, f"Caption generation failed: {e}")
